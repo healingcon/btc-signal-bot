@@ -1,1 +1,39 @@
+name: BTC AI Signal Bot
 
+on:
+  schedule:
+    # 15분마다 실행 (UTC 기준 — KST = UTC+9)
+    - cron: '*/15 * * * *'
+
+  # 수동 실행 버튼 (테스트용)
+  workflow_dispatch:
+    inputs:
+      symbol:
+        description: '코인 심볼 (예: BTCUSDT, ETHUSDT)'
+        required: false
+        default: 'BTCUSDT'
+
+jobs:
+  run-signal-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 📥 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 🐍 Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 패키지 설치
+        run: pip install requests
+
+      - name: 🤖 시그널 봇 실행
+        env:
+          TG_TOKEN:         ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID:       ${{ secrets.TG_CHAT_ID }}
+          SYMBOL:           ${{ github.event.inputs.symbol || 'BTCUSDT' }}
+          SCORE_THRESHOLD:  ${{ vars.SCORE_THRESHOLD || '70' }}
+        run: python src/signal_bot.py
